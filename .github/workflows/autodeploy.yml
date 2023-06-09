@@ -1,0 +1,25 @@
+on:
+  push:
+    branches:
+      - master
+jobs:
+  deploy_job:
+    name: deploy
+    runs-on: self-hosted
+    steps:
+    - name: Checkout project sources
+      uses: actions/checkout@v2
+    - name: build fatjar
+      run: |
+        chmod +x gradlew
+        ./gradlew customFatJar
+    - name: stop bot
+      run: 
+        sh /root/bots/discord_bot_for_freezye/stop.sh
+    - name: change jarfile
+      run:
+        mv build/libs/discord_bot_for_freezye-1.0.jar /root/bots/discord_bot_for_freezye/discord_bot_for_freezye-1.0.jar
+    - name: start bot
+      run: |
+        who
+        sudo /root/bots/discord_bot_for_freezye/screen.sh
