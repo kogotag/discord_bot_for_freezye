@@ -380,10 +380,8 @@ public class RulesModule extends BotModule {
 
         String oldMessageId = guildConfig.getRulesMessageId();
         if (oldMessageId != null) {
-            try {
-                channel.retrieveMessageById(oldMessageId).queue(oldMessage -> oldMessage.delete().queue());
-            } catch (Exception ignored) {
-            }
+            channel.retrieveMessageById(oldMessageId).queue(oldMessage -> oldMessage.delete().queue(), new ErrorHandler()
+                    .ignore(ErrorResponse.UNKNOWN_MESSAGE));
         }
 
         Message message = channel.sendMessage(text).complete();
