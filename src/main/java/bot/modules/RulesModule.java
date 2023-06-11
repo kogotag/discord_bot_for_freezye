@@ -12,24 +12,29 @@ import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 import net.dv8tion.jda.api.entities.channel.unions.GuildChannelUnion;
 import net.dv8tion.jda.api.entities.emoji.Emoji;
 import net.dv8tion.jda.api.events.interaction.command.SlashCommandInteractionEvent;
+import net.dv8tion.jda.api.events.message.MessageReceivedEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionAddEvent;
 import net.dv8tion.jda.api.events.message.react.MessageReactionRemoveEvent;
 import net.dv8tion.jda.api.events.session.ReadyEvent;
 import net.dv8tion.jda.api.exceptions.ErrorHandler;
 import net.dv8tion.jda.api.exceptions.ErrorResponseException;
 import net.dv8tion.jda.api.requests.ErrorResponse;
+import org.apache.commons.collections4.KeyValue;
 import org.apache.commons.text.StringEscapeUtils;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.List;
-import java.util.Objects;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class RulesModule extends BotModule {
     private Message rulesMessage;
+    private List<RulesSetTextInfo> rulesSetTextInfoList;
 
     public RulesModule(JDA jda) {
         super(jda);
+        rulesSetTextInfoList = new ArrayList<>();
     }
 
     @Override
@@ -74,6 +79,24 @@ public class RulesModule extends BotModule {
                 }
             }
         }
+
+        Timer timer = new Timer();
+        timer.schedule(new TimerTask() {
+            @Override
+            public void run() {
+                List<RulesSetTextInfo> toRemove = new ArrayList<>();
+                LocalDateTime now = LocalDateTime.now();
+                for (RulesSetTextInfo info : rulesSetTextInfoList) {
+                    if (Math.abs(Duration.between(now, info.getLocalDateTime()).toMinutes()) >= 5) {
+                        toRemove.add(info);
+                    }
+                }
+
+                for (RulesSetTextInfo info : toRemove) {
+                    rulesSetTextInfoList.remove(info);
+                }
+            }
+        }, 0, 120000);
     }
 
     @Override
@@ -142,9 +165,18 @@ public class RulesModule extends BotModule {
             return;
         }
 
-        Member member = event.retrieveMember().complete();
+        String userId = event.getUserId();
+        Member member = null;
+        try {
+            member = guild.retrieveMemberById(userId).complete();
+        } catch (ErrorResponseException ignored) {
+        }
 
         if (member == null) {
+            event.getChannel().sendMessage("Простите, я опять мразь, и не вижу юзера\n" +
+                    "вот userId из эвента: " + event.getUserId()
+                    + "\nА вот я пытаюсь сделать ретрив мембера: "
+                    + guild.retrieveMemberById(event.getUserId()).complete()).queue();
             return;
         }
 
@@ -186,7 +218,12 @@ public class RulesModule extends BotModule {
             return;
         }
 
-        Member member = event.retrieveMember().complete();
+        String userId = event.getUserId();
+        Member member = null;
+        try {
+            member = guild.retrieveMemberById(userId).complete();
+        } catch (ErrorResponseException ignored) {
+        }
 
         if (member == null) {
             return;
@@ -197,6 +234,40 @@ public class RulesModule extends BotModule {
                     System.out.println("missing permissions to add roles to users on guild: " + guild.getName());
                     guildConfig.setRulesEnabled(false);
                 }));
+    }
+
+    @Override
+    public void onMessageReceived(MessageReceivedEvent event) {
+        super.onMessageReceived(event);
+
+        if (jda.getSelfUser().equals(event.getAuthor())) {
+            return;
+        }
+
+        if (!event.getChannel().getType().equals(ChannelType.TEXT)) {
+            return;
+        }
+
+        if (event.getMessage().getContentRaw().isEmpty()) {
+            return;
+        }
+
+        RulesSetTextInfo rulesSetTextInfo = rulesSetTextInfoList
+                .stream()
+                .filter(info -> info.getUserId().equals(event.getAuthor().getId()) &&
+                        info.getGuildId().equals(event.getGuild().getId()) &&
+                        info.getChannelId().equals(event.getChannel().asTextChannel().getId()))
+                .findFirst()
+                .orElse(null);
+
+        if (rulesSetTextInfo == null) {
+            return;
+        }
+
+        GuildConfig guildConfig = DynamicConfig.getConfig().getGuildConfigById(event.getGuild().getId());
+        guildConfig.setRulesText(event.getMessage().getContentRaw());
+        rulesSetTextInfoList.remove(rulesSetTextInfo);
+        event.getChannel().sendMessage("Текст правил успешно обновлён").queue();
     }
 
     private void rulesSetChannel(SlashCommandInteractionEvent event, GuildConfig guildConfig) {
@@ -226,15 +297,20 @@ public class RulesModule extends BotModule {
             return;
         }
 
-        String text = Objects.requireNonNull(event.getOption("text")).getAsString();
-
-        if (text.length() > 2000) {
-            event.reply("Текст не может быть длиннее 2000 символов").setEphemeral(true).queue();
+        if (!event.getChannel().getType().equals(ChannelType.TEXT)) {
+            event.reply("Команда доступна только из текстовых каналов").setEphemeral(true).queue();
             return;
         }
 
-        guildConfig.setRulesText(text);
-        event.reply("Текст для правил установлен").setEphemeral(true).queue();
+        TextChannel channel = event.getChannel().asTextChannel();
+
+        rulesSetTextInfoList.add(new RulesSetTextInfo(
+                event.getUser().getId(),
+                event.getGuild().getId(),
+                LocalDateTime.now(),
+                channel.getId()));
+
+        event.reply("Отправьте текст вашим следующим сообщением в этом канале").queue();
     }
 
     private void rulesSetRole(SlashCommandInteractionEvent event, GuildConfig guildConfig) {
@@ -313,6 +389,7 @@ public class RulesModule extends BotModule {
         }
 
         guildConfig.setRulesMessageId(message.getId());
+        rulesMessage = message;
         guildConfig.setRulesEnabled(true);
         event.reply("Модуль правил успешно запущен").setEphemeral(true).queue();
     }
@@ -396,6 +473,7 @@ public class RulesModule extends BotModule {
         message.addReaction(emoji).queue();
 
         guildConfig.setRulesMessageId(message.getId());
+        rulesMessage = message;
         event.reply("Новое сообщение отправлено").setEphemeral(true).queue();
     }
 
