@@ -14,11 +14,13 @@ public class GuildConfig {
     private String rulesText;
     private String rulesAcceptedRoleId;
     private String rulesMessageId;
+    private List<Subscription> subscriptions;
 
     public GuildConfig(String guildId) {
         this.guildId = guildId;
         this.prefix = GuildConfig.defaultPrefix;
         botAdminRoles = new ArrayList<>();
+        subscriptions = new ArrayList<>();
         rulesText = "";
     }
 
@@ -108,5 +110,27 @@ public class GuildConfig {
 
     public static String getDefaultRulesEmoji() {
         return defaultRulesEmoji;
+    }
+
+    public List<Subscription> getSubscriptions() {
+        if (subscriptions == null) {
+            subscriptions = new ArrayList<>();
+        }
+        return subscriptions;
+    }
+
+    public void setSubscriptions(List<Subscription> subscriptions) {
+        this.subscriptions = subscriptions;
+        DynamicConfig.save();
+    }
+
+    public void addSubscription(Subscription subscription) {
+        subscriptions.add(subscription);
+        DynamicConfig.save();
+    }
+
+    public void removeSubscription(Subscription subscription) {
+        subscriptions.remove(subscription);
+        DynamicConfig.save();
     }
 }

@@ -23,6 +23,8 @@ public class BotModule extends ListenerAdapter {
     protected StaticConfig staticConfig;
     protected DynamicConfig dynamicConfig;
     protected Random random;
+    protected static final String defaultAcceptEmoji = "✅";
+    protected static final String defaultRejectEmoji = "❎";
 
     public BotModule(JDA jda) {
         this.jda = jda;

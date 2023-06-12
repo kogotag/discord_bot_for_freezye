@@ -4,6 +4,7 @@ import bot.config.StaticConfig;
 import bot.modules.BotModule;
 import bot.modules.MainModule;
 import bot.modules.RulesModule;
+import bot.modules.SubscriptionModule;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;
@@ -19,5 +20,6 @@ public class Main {
 
         BotModule mainModule = new MainModule(jda);
         BotModule rulesModule = new RulesModule(jda);
+        BotModule subscriptionsModule = new SubscriptionModule(jda);
     }
 }

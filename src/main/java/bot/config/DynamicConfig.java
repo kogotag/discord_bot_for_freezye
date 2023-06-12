@@ -7,6 +7,7 @@ import com.google.gson.stream.JsonReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -15,6 +16,7 @@ public class DynamicConfig {
     private static String configFileName = "/dynamic_config.json";
     private List<GuildConfig> guildConfigs;
     private PMConfig pmConfig;
+    private int lastSubscriptionId;
 
     public DynamicConfig() {
         guildConfigs = new ArrayList<>();
@@ -29,7 +31,7 @@ public class DynamicConfig {
             File configFile = new File(pathToConfig);
             try {
                 if (configFile.exists()) {
-                    JsonReader reader = new JsonReader(new FileReader(configFile));
+                    JsonReader reader = new JsonReader(new FileReader(configFile, StandardCharsets.UTF_8));
                     config = gson.fromJson(reader, DynamicConfig.class);
                     reader.close();
                 } else {
@@ -45,12 +47,14 @@ public class DynamicConfig {
     }
 
     public static void save() {
-        Gson gson = new GsonBuilder().create();
+        Gson gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .create();
         String pathToConfig = new File(StaticConfig.class.getProtectionDomain().getCodeSource().getLocation()
                 .getPath()).getParent() + "/" + configFileName;
         File configFile = new File(pathToConfig);
         try {
-            FileWriter writer = new FileWriter(configFile, false);
+            FileWriter writer = new FileWriter(configFile, StandardCharsets.UTF_8, false);
             writer.write(gson.toJson(config, DynamicConfig.class));
             writer.close();
         } catch (Exception e) {
@@ -77,5 +81,19 @@ public class DynamicConfig {
     public void addGuildConfig(GuildConfig guildConfig) {
         guildConfigs.add(guildConfig);
         DynamicConfig.save();
+    }
+
+    public int getLastSubscriptionId() {
+        return lastSubscriptionId;
+    }
+
+    public void setLastSubscriptionId(int lastSubscriptionId) {
+        this.lastSubscriptionId = lastSubscriptionId;
+        save();
+    }
+
+    public void incLastSubscriptionId() {
+        lastSubscriptionId++;
+        save();
     }
 }

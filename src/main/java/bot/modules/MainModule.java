@@ -145,6 +145,10 @@ public class MainModule extends BotModule {
                 .addCommands(Commands.slash("rules_info", "Выводит инструкцию по установке модуля правил на ваш сервер"))
                 .addCommands(Commands.slash("rules_send_new_message", "Отправляет новое сообщение в канал правил и предпринимает попытку удалить предыдущее"))
                 .addCommands(Commands.slash("rules_update_message", "Редактирует сообщение с правилами"))
+                .addCommands(Commands.slash("subscriptions_list", "Выводит список текущих подписок"))
+                .addCommands(Commands.slash("subscriptions_remove", "Удаляет подписку по id")
+                        .addOption(OptionType.INTEGER, "id", "id подписки", true))
+                .addCommands(Commands.slash("subscriptions_create", "Запускает конструктор подписок"))
                 .queue();
     }
 
