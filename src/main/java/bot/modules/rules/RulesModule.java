@@ -1,7 +1,8 @@
-package bot.modules;
+package bot.modules.rules;
 
 import bot.config.DynamicConfig;
 import bot.config.GuildConfig;
+import bot.modules.BotModule;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.Guild;
 import net.dv8tion.jda.api.entities.Member;

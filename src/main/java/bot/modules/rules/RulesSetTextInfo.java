@@ -1,4 +1,4 @@
-package bot.modules;
+package bot.modules.rules;
 
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
 

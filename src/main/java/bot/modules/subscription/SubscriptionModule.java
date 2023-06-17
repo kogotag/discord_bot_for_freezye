@@ -1,9 +1,10 @@
-package bot.modules;
+package bot.modules.subscription;
 
 import bot.config.DynamicConfig;
 import bot.config.GuildConfig;
 import bot.config.Subscription;
 import bot.config.SubscriptionBuilder;
+import bot.modules.BotModule;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.entities.*;
 import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;

@@ -2,6 +2,9 @@ package bot;
 
 import bot.config.StaticConfig;
 import bot.modules.*;
+import bot.modules.ny.NyModule;
+import bot.modules.rules.RulesModule;
+import bot.modules.subscription.SubscriptionModule;
 import net.dv8tion.jda.api.JDA;
 import net.dv8tion.jda.api.JDABuilder;
 import net.dv8tion.jda.api.requests.GatewayIntent;

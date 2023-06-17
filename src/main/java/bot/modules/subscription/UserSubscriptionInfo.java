@@ -1,4 +1,4 @@
-package bot.modules;
+package bot.modules.subscription;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
