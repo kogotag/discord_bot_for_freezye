@@ -2,7 +2,6 @@ package bot;
 
 import bot.config.StaticConfig;
 import bot.modules.*;
-import bot.modules.ny.NyModule;
 import bot.modules.rules.RulesModule;
 import bot.modules.subscription.SubscriptionModule;
 import net.dv8tion.jda.api.JDA;
@@ -21,6 +20,5 @@ public class Main {
         BotModule mainModule = new MainModule(jda);
         BotModule rulesModule = new RulesModule(jda);
         BotModule subscriptionsModule = new SubscriptionModule(jda);
-        BotModule nyModule = new NyModule(jda);
     }
 }
