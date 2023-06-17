@@ -2,24 +2,40 @@ on:
   push:
     branches:
       - master
+
+env:
+  PROJECT_NAME: discord_bot_for_freezye
+
 jobs:
-  deploy_job:
+  deploy:
     name: deploy
     runs-on: self-hosted
     steps:
-    - name: Checkout project sources
-      uses: actions/checkout@v2
-    - name: build fatjar
-      run: |
-        chmod +x gradlew
-        ./gradlew customFatJar
-    - name: stop bot
-      run: 
-        sh /root/bots/discord_bot_for_freezye/stop.sh
-    - name: change jarfile
-      run:
-        mv build/libs/discord_bot_for_freezye-1.0.jar /root/bots/discord_bot_for_freezye/discord_bot_for_freezye-1.0.jar
-    - name: start bot
-      run: |
-        who
-        sudo /root/bots/discord_bot_for_freezye/screen.sh
+      - name: Checkout project sources
+        uses: actions/checkout@v2
+      - name: Clean directories
+        run: |
+          mkdir -p ~/$PROJECT_NAME/build || true
+          mkdir -p ~/$PROJECT_NAME/work || true
+          mkdir -p ~/$PROJECT_NAME/configs || true
+          [[ -f ~/$PROJECT_NAME/configs/static_config.yaml ]] || touch ~/$PROJECT_NAME/configs/static_config.yaml
+          [[ -f ~/$PROJECT_NAME/configs/dynamic_config.json ]] || touch ~/$PROJECT_NAME/configs/dynamic_config.json
+          rm -rf ~/$PROJECT_NAME/build/* || true
+          rm -rf ~/$PROJECT_NAME/work/* || true
+      - name: Copy everything in work directory
+        run: |
+          mv -v ./{src,gradle,build.gradle,settings.gradle,gradlew,docker-compose.yml,Dockerfile,docker-compose-build.yml,Dockerfile_build} ~/$PROJECT_NAME/work/
+      - name: Build jar
+        run: |
+          docker container stop $PROJECT_NAME_build || true
+          docker container rm $PROJECT_NAME_build || true
+          docker image rm work-$PROJECT_NAME_build || true
+          docker compose -f ~/$PROJECT_NAME/work/docker-compose-build.yml up
+          mv ~/$PROJECT_NAME/build/$PROJECT_NAME-1.0.jar ~/$PROJECT_NAME/work/
+      - name: Stop active bot
+        run: |
+          docker stop $PROJECT_NAME || true
+          docker rm $PROJECT_NAME || true
+          docker image rm work-$PROJECT_NAME || true
+      - name: Start bot
+        run: docker compose -f ~/$PROJECT_NAME/work/docker-compose.yml up -d

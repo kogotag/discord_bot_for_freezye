@@ -1,0 +1,8 @@
+FROM openjdk:11
+WORKDIR /app
+COPY src ./src
+COPY gradle ./gradle
+COPY build.gradle settings.gradle gradlew .
+RUN chmod -R +x .
+RUN ./gradlew --version
+CMD ./gradlew customFatJar

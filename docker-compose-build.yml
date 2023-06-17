@@ -1,0 +1,8 @@
+services:
+  discord_bot_for_freezye_build:
+    container_name: discord_bot_for_freezye_build
+    build:
+      context: .
+      dockerfile: Dockerfile_build
+    volumes:
+      - ../build:/app/build/libs
